@@ -96,9 +96,8 @@ lba_to_chs:
     shl ah, 6
     or cl , ah ; cylinder
 
-    pop ax
-    mov dl,al
     pop dx
+    pop ax
 
     ret
 
@@ -111,7 +110,10 @@ disk_read:
     push dx
     push di
 
+    push cx         ; SAVE cx (which holds the sector count) because lba_to_chs overwrites it!
     call lba_to_chs
+    pop ax          ; POP the saved sector count into ax. This sets AL to the number of sectors to read!
+    
     mov ah, 0x02 ; to read disk mov 02h to ah
     mov di, 3 ; counter to try atleast 3 times
 
@@ -141,7 +143,6 @@ disk_reset:
     stc ; to check if disk reset succeded 
     int 13h
     jc fail_disk_read ; if cf = 1
-    jnc retry ; jmp to retry again
     popa
     ret
 
